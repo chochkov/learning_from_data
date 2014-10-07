@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define N 100
-#define SIMULATIONS (int)1
+#define N 10
+#define SIMULATIONS (int)2
 
 typedef struct {
   double w0;
@@ -81,7 +81,7 @@ Datum *dataset(Line *line)
 
 Weight *initWeights()
 {
-  Weight *result = (Weight *)malloc(sizeof(Weight) * N);
+  Weight *result = (Weight *)malloc(sizeof(Weight));
 
   result->w0 = 0;
   result->w1 = 0;
@@ -99,38 +99,66 @@ Datum *misclassified(Datum *X)
   }
 
   Datum *result = (Datum *)malloc(sizeof(Datum) * size);
-  for (i = 0; i < size; i++) {
-    if (X[i].y != X[i].y_hat) result[i] = X[i];
+  for (i = 0; i < N; i++) {
+    if (X[i].y != X[i].y_hat) {
+      result[i] = X[i];
+      printf("have %d want %d. Points: %f, %f\n", X[i].y, X[i].y_hat, X[i].x1, X[i].x2);
+    }
   }
 
   return result;
 }
 
-void adjustWeights(Weight *w, Datum *misclassified)
+void adjustWeights(Weight *w, Datum *m)
 {
-  int size;
+  int size = 0;
   int i;
   for (i = 0; i < N; i++) {
+    if (m[i].y != m[i].y_hat) size ++;
   }
+
+  int index = random() % size;
+
+  printf("\n");
+  printf("Missclassified: %d\n", size);
+  printf("want: %d, have: %d\n", m[index].y, m[index].y_hat);
+  printf("x1: %f, x2: %f\n", m[index].x1, m[index].x2);
+
+  w->w0 += m[index].y * 1;
+  w->w1 += m[index].x1 * m[index].y;
+  w->w2 += m[index].x2 * m[index].y;
 }
 
 int iterations(Datum *X)
 {
   int result = 0;
   Weight *w = initWeights();
-  bool converged;
 
   do {
     int i;
     for (i = 0; i < N; i++) {
-      X[i].y_hat = (w[i].w0 + w[i].w1 * X[i].x1 + w[i].w2 * X[i].x2 > 0) ? -1 : 1;
+      double q = w->w0 + w->w1 * X[i].x1 + w->w2 * X[i].x2;
+      printf("quantity %f\n", q);
+      X[i].y_hat = q > 0 ? -1 : 1;
     }
     result ++;
 
-    if (misclassified(X) == 0) break;
+    Datum *m = misclassified(X);
 
-    adjustWeights(w, X);
-  } while (false); // true
+    int size = 0;
+    int s = 0;
+    for (s = 0; s < N; s++) {
+      if (m[s].y != m[s].y_hat) size ++;
+    }
+    if (size == 0) break;
+
+    adjustWeights(w, m);
+    free(m);
+    printf("NEW WEIGHTS\n");
+    printf("%f\n", w->w0);
+    printf("%f\n", w->w1);
+    printf("%f\n", w->w2);
+  } while (true);
 
   free(w);
   return result;
@@ -156,12 +184,12 @@ int main(void)
     for (i = 0; i < N; i++) {
       printf("%f %f %f %d\n", X[i].x1, X[i].x2, thresholdX2(X[i].x1, line), X[i].y);
     }
-    iterations_total += iterations(X);
+    /* iterations_total += iterations(X); */
 
     free(line);
     free(X);
   }
 
-  /* printf("Average number of iterations for %d simulations: %f\n", SIMULATIONS, (double)iterations_total/SIMULATIONS); */
+  printf("Average number of iterations for %d simulations: %f\n", SIMULATIONS, (double)iterations_total/SIMULATIONS);
   return 0;
 }
