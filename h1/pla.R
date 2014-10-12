@@ -30,16 +30,17 @@ new.line <- function() {
 # d[y==1, points(x1, x2, col='red')]
 # d[y==-1, points(x1, x2, col='blue')]
 
-# R repetitions, N 10 datapoints, w weights
+# R repetitions, N 10 datapoints
 R <- 1e3
 N <- 10
-w <- numeric(3)
 iterations <- numeric(R)
 
 for (r in 1:R) {
-  d = dataset(N)
-
+  d <- dataset(N)
+  w <- lm(y ~ x1 + x2, data=d)$coefficients # initialize weights from linear fit
+  # w <- numeric(3)                           # initialize weights as zeros
   i <- 0
+
   while (TRUE) {
     i <- i + 1
 
