@@ -1,1 +1,1 @@
-make clean && make all && ./h1.o
+make clean && make all && ./pla.o
