@@ -37,5 +37,5 @@ for (r in 1:RR) {
   repo[r, 3] = sum(dat[, c3]) / TT # ratio of heads for coin 1
 }
 
-cat('Problem 6 \n')
+cat('Problem 1 \n')
 print(colMeans(repo)/RR)
